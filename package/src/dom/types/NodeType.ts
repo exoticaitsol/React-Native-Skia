@@ -68,8 +68,13 @@ export const enum NodeType {
   Glyphs = "skGlyphs",
   Picture = "skPicture",
   ImageSVG = "skImageSVG",
+
+  // Rich Text
+  RichText = "skRichText",
+  Span = "skSpan",
 }
 
+// TODO: can declaration type be removed?
 export const enum DeclarationType {
   Paint,
   Shader,
@@ -77,5 +82,6 @@ export const enum DeclarationType {
   ColorFilter,
   PathEffect,
   MaskFilter,
+  Span,
   Unknown,
 }

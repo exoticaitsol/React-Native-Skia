@@ -50,6 +50,8 @@ import type {
   LerpColorFilterProps,
   BoxProps,
   BoxShadowProps,
+  RichTextProps,
+  SpanProps,
 } from "../dom/types";
 import type { ChildrenProps } from "../dom/types/Common";
 import type {
@@ -66,7 +68,7 @@ import type { SkiaProps } from "./processors";
 import type { DependencyManager } from "./DependencyManager";
 
 // This flag should only be turned on for debugging/testing
-const shouldUseJSDomOnNative = false;
+const shouldUseJSDomOnNative = true;
 export const NATIVE_DOM = shouldUseJSDomOnNative ? false : !!global.SkiaDomApi;
 
 declare global {
@@ -223,6 +225,10 @@ declare global {
       skPicture: SkiaProps<PictureProps>;
       skImageSVG: SkiaProps<ImageSVGProps>;
 
+      // RichText
+      skSpan: SkiaProps<SpanProps>;
+      skRichText: SkiaProps<RichTextProps>;
+
       // BlurMaskFilters
       skBlurMaskFilter: SkiaProps<BlurMaskFilterProps>;
 
@@ -325,6 +331,11 @@ export const createNode = (
       return Sk.Picture(props);
     case NodeType.ImageSVG:
       return Sk.ImageSVG(props);
+    // RichText
+    case NodeType.Span:
+      return Sk.Span(props);
+    case NodeType.RichText:
+      return Sk.RichText(props);
     // Mask Filter
     case NodeType.BlurMaskFilter:
       return Sk.BlurMaskFilter(props);
@@ -390,6 +401,7 @@ export const createNode = (
       return Sk.SumPathEffect();
     case NodeType.Line2DPathEffect:
       return Sk.Line2DPathEffect(props);
+
     // Mixed
     case NodeType.Blend:
       return Sk.Blend(props);
