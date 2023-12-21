@@ -3,10 +3,10 @@ import fs from "fs";
 import { executeCmdSync } from "./utils";
 
 export const cleanLibGraphemeiOS = () => {
-  const currentDir = process.cwd();
-  process.chdir("./third_party/externals/libgrapheme");
-  executeCmdSync("make clean");
-  process.chdir(currentDir);
+  // const currentDir = process.cwd();
+  // process.chdir("./third_party/externals/libgrapheme");
+  // executeCmdSync("make clean");
+  // process.chdir(currentDir);
 };
 
 // Build instructions for building  build-libgrapheme-ios
