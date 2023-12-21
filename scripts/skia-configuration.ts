@@ -1,4 +1,4 @@
-import { buildLibGraphemeiOS } from "./build-libgrapheme-ios";
+import { buildLibGraphemeiOS, cleanLibGraphemeiOS } from "./build-libgrapheme-ios";
 import { executeCmdSync } from "./utils";
 
 const NdkDir: string = process.env.ANDROID_NDK ?? "";
@@ -73,7 +73,7 @@ export type Platform = {
   outputRoot: string;
   outputNames: string[];
   options?: Arg[];
-  dependencies?: { name: string; executable: () => void }[];
+  dependencies?: { name: string; executable: () => void, clean: () => void }[];
 };
 
 export const configurations: Configuration = {
@@ -168,6 +168,7 @@ export const configurations: Configuration = {
       {
         name: "libgrapheme",
         executable: buildLibGraphemeiOS,
+        clean: cleanLibGraphemeiOS,
       },
     ],
   },

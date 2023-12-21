@@ -2,8 +2,15 @@ import os from "os";
 import fs from "fs";
 import { executeCmdSync } from "./utils";
 
+export const cleanLibGraphemeiOS = () => {
+  const currentDir = process.cwd();
+  process.chdir("./third_party/externals/libgrapheme");
+  executeCmdSync("make clean");
+  process.chdir(currentDir);
+};
+
 // Build instructions for building  build-libgrapheme-ios
-export const buildLibGraphemeiOS = async () => {
+export const buildLibGraphemeiOS = () => {
   // Empty the generate_headers.py file
   console.log("Patching the Skia buildscript 'generate_headers.py'...");
   const file = fs.openSync(

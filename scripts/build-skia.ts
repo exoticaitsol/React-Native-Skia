@@ -194,6 +194,7 @@ try {
     console.log(`Found dependencies for platform ${SelectedPlatform}`);
     platform.dependencies.forEach((dep) => {
       console.log(`Running dependency ${dep.name}`);
+      dep.clean();
       dep.executable();
     });
   }
