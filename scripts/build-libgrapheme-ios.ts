@@ -12,17 +12,17 @@ export const cleanLibGraphemeiOS = () => {
 // Build instructions for building  build-libgrapheme-ios
 export const buildLibGraphemeiOS = () => {
   // Empty the generate_headers.py file
-  console.log("Patching the Skia buildscript 'generate_headers.py'...");
-  const file = fs.openSync(
-    "./third_party/libgrapheme/generate_headers.py",
-    "w"
-  );
-  fs.writeSync(
-    file,
-    "print('[generate_headers.py] This file has been patched by the RN Skia build script.')"
-  );
-  fs.closeSync(file);
-  console.log("Finished patching generate_headers.py.");
+  // console.log("Patching the Skia buildscript 'generate_headers.py'...");
+  // const file = fs.openSync(
+  //   "./third_party/libgrapheme/generate_headers.py",
+  //   "w"
+  // );
+  // fs.writeSync(
+  //   file,
+  //   "print('[generate_headers.py] This file has been patched by the RN Skia build script.')"
+  // );
+  // fs.closeSync(file);
+  // console.log("Finished patching generate_headers.py.");
 
   console.log("Building libgrapheme for iOS...");
 
