@@ -16,6 +16,8 @@ import { Dimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 
+import { frag } from "../../components/ShaderLib";
+
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.9;
 const CARD_HEIGHT = CARD_WIDTH / 1.618;
@@ -40,6 +42,26 @@ const springConfig = (velocity: number) => {
     velocity,
   };
 };
+
+const source = frag`
+uniform mat4 m4;
+
+vec4 main(vec2 fragCoord)
+{
+    vec2 pos = (m4 * vec4(fragCoord, 1.0, 1.0)).xy; // Apply transformation to fragment position
+    float radius = 100; // Radius of the circle
+    vec2 center = vec2(${(width / 2).toFixed(1)}, ${(height / 2).toFixed(
+  1
+)}); // Center of the circle
+
+    // Check if the current fragment is inside the circle
+    if (length(pos - center) < radius) {
+        return vec4(0.3, 0.6, 1.0, 1.0); // Inside the circle (orange color)
+    } else {
+        return vec4(0.0, 0.0, 0.0, 1.0); // Outside the circle (transparent)
+    }
+}
+`;
 
 export const FrostedCard = () => {
   const image = useImage(require("./dynamo.jpg"));
