@@ -8,7 +8,9 @@ import {
   Fill,
   Blur,
   usePathValue,
+  Shader,
 } from "@shopify/react-native-skia";
+import { useDerivedValue } from "@shopify/react-native-skia/src/external/reanimated/moduleWrapper";
 import React from "react";
 import { Dimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -67,6 +69,17 @@ export const FrostedCard = () => {
       ])
     );
   });
+  const uniforms = useDerivedValue(() => {
+    return {
+      m4: processTransform3d([
+        { translate: [width / 2, height / 2] },
+        { perspective: 300 },
+        { rotateX: rotateX.value },
+        { rotateY: rotateY.value },
+        { translate: [-width / 2, -height / 2] },
+      ]),
+    };
+  });
   return (
     <View style={{ flex: 1 }}>
       <GestureDetector gesture={gesture}>
@@ -79,9 +92,12 @@ export const FrostedCard = () => {
             height={height}
             fit="cover"
           />
-          <BackdropFilter filter={<Blur blur={30} mode="clamp" />} clip={clip}>
+          <Fill>
+            <Shader source={source} uniforms={uniforms} />
+          </Fill>
+          {/* <BackdropFilter filter={<Blur blur={30} mode="clamp" />} clip={clip}>
             <Fill color="rgba(255, 255, 255, 0.1)" />
-          </BackdropFilter>
+          </BackdropFilter> */}
         </Canvas>
       </GestureDetector>
     </View>
