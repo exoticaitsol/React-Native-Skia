@@ -47,16 +47,17 @@ const springConfig = (velocity: number) => {
 };
 
 const source = frag`
-uniform mat3 m3;
+uniform mat4 m4;
 uniform vec2 resolution;
 
 ${Core}
 
 vec4 main(vec2 xy)
 {
-  Context ctx = Context(TRANSPARENT, xy, resolution);
-  ctx.p = project(ctx.p, m3);
-  drawRect(ctx, vec4(0., 0., 300., 300.), createFill(vec4(.3, .6, 1., 1.)));
+  vec3 xyz = vec3(xy, 0.);
+  Context ctx = Context(TRANSPARENT, xyz, resolution);
+  ctx.p = project(ctx.p, translate(vec3(300., 300., 0.)));
+  drawSphere(ctx, 300., createFill(vec4(.3, .6, 1., 1.)));
   return ctx.color;
 }
 `;
@@ -79,15 +80,13 @@ export const FrostedCard = () => {
   const uniforms = useDerivedValue(() => {
     return {
       resolution: [width, height],
-      m3: toMatrix3(
-        processTransform3d([
-          // { translate: [width / 2, height / 2] },
-          //          { perspective: 300 },
-          // { rotateX: rotateX.value },
-          // { rotateY: rotateY.value },
-          // { translate: [-width / 2, -height / 2] },
-        ])
-      ),
+      m4: processTransform3d([
+        { translate: [width / 2, height / 2] },
+        { perspective: 300 },
+        { rotateX: rotateX.value },
+        { rotateY: rotateY.value },
+        { translate: [-width / 2, -height / 2] },
+      ]),
     };
   });
   return (
