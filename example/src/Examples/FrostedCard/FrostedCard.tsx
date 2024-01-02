@@ -6,14 +6,10 @@ import {
   Image,
   BackdropFilter,
   Fill,
-  Blur,
   usePathValue,
-  Shader,
   convertToColumnMajor,
-  Circle,
-  mapPoint3d,
-  interpolate,
   RuntimeShader,
+  mapPoint3d,
 } from "@shopify/react-native-skia";
 import React from "react";
 import { Dimensions, PixelRatio, View } from "react-native";
@@ -56,22 +52,16 @@ const springConfig = (velocity: number) => {
 };
 
 const source = frag`uniform shader image;
-uniform mat4 m4;
 uniform vec2 resolution;
-uniform vec2 p1;
-uniform vec2 p2;
-uniform vec3 p3;
-uniform vec3 p4;
+uniform vec3 p1;
+uniform vec3 p2;
 
 ${Core}
 
 half4 main(float2 xy) {
   Context ctx = Context(image.eval(xy), xy, resolution);
-  vec3 p1t = project(p1, m4);
-  vec3 p2t = project(p2, m4);
-  drawSegment(ctx, p1t.xy, p2t.xy, createStroke(vec4(.3, 0.6, 1., 1.), 10.));
-  drawSegment(ctx, p3.xy, p4.xy, createStroke(vec4(1., 0.6, .3, 1.), 10.));
-  return vec4(ctx.color.rgb, 1.);
+  drawSegment(ctx, p1.xy, p2.xy, createStroke(vec4(.3, 0.6, 1., 1.), 10.));
+  return ctx.color;
 }`;
 
 export const FrostedCard = () => {
@@ -112,15 +102,11 @@ export const FrostedCard = () => {
       { rotateY: rotateY.value },
       { translate: [-width / 2, -height / 2] },
     ]);
-    const p3 = mapPoint3d(m4, [rct.x, rct.y, 0]);
-    const p4 = mapPoint3d(m4, [rct.x + CARD_WIDTH, rct.y, 0]);
     return {
       m4: convertToColumnMajor(m4),
       resolution: [width, height],
-      p1: [rct.x, rct.y],
-      p2: [rct.x + CARD_WIDTH, rct.y],
-      p3,
-      p4,
+      p1: mapPoint3d(m4, [rct.x, rct.y, 0]),
+      p2: mapPoint3d(m4, [rct.x + rct.width, rct.y, 0]),
     };
   });
   return (
