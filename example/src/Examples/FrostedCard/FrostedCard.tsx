@@ -9,19 +9,27 @@ import {
   Blur,
   usePathValue,
   Shader,
-  toMatrix3,
   convertToColumnMajor,
+  Circle,
+  mapPoint3d,
+  interpolate,
+  RuntimeShader,
 } from "@shopify/react-native-skia";
-import { useDerivedValue } from "@shopify/react-native-skia/src/external/reanimated/moduleWrapper";
 import React from "react";
-import { Dimensions, View } from "react-native";
+import { Dimensions, PixelRatio, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { useSharedValue, withSpring } from "react-native-reanimated";
+import {
+  useSharedValue,
+  withSpring,
+  useDerivedValue,
+} from "react-native-reanimated";
 
 import { frag } from "../../components/ShaderLib";
 
 import { Core } from "./Core";
 
+const pd = PixelRatio.get();
+console.log({ pd });
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.9;
 const CARD_HEIGHT = CARD_WIDTH / 1.618;
@@ -47,22 +55,24 @@ const springConfig = (velocity: number) => {
   };
 };
 
-const source = frag`
+const source = frag`uniform shader image;
 uniform mat4 m4;
 uniform vec2 resolution;
+uniform vec2 p1;
+uniform vec2 p2;
+uniform vec3 p3;
+uniform vec3 p4;
 
 ${Core}
 
-vec4 main(vec2 xy)
-{
-  vec3 xyz = vec3(xy, 0.);
-  Context ctx = Context(TRANSPARENT, xyz, resolution);
-  ctx.p = project(ctx.p, translate(vec3(resolution/2., 0.)) * m4);
-  //drawSphere(ctx, 300., createFill(vec4(.3, .6, 1., 1.)));
-  drawBox(ctx, vec3(300.), createFill(vec4(.3, .6, 1., 1.)));
-  return ctx.color;
-}
-`;
+half4 main(float2 xy) {
+  Context ctx = Context(image.eval(xy), xy, resolution);
+  vec3 p1t = project(p1, m4);
+  vec3 p2t = project(p2, m4);
+  drawSegment(ctx, p1t.xy, p2t.xy, createStroke(vec4(.3, 0.6, 1., 1.), 10.));
+  drawSegment(ctx, p3.xy, p4.xy, createStroke(vec4(1., 0.6, .3, 1.), 10.));
+  return vec4(ctx.color.rgb, 1.);
+}`;
 
 export const FrostedCard = () => {
   const image = useImage(require("./dynamo.jpg"));
@@ -79,18 +89,38 @@ export const FrostedCard = () => {
       rotateY.value = withSpring(0, springConfig(velocityX / sf));
     });
 
+  const clip = usePathValue((path) => {
+    "worklet";
+    path.addRRect(rrct);
+    path.transform(
+      processTransform3d([
+        { translate: [width / 2, height / 2] },
+        { perspective: 300 },
+        { rotateX: rotateX.value },
+        { rotateY: rotateY.value },
+        { translate: [-width / 2, -height / 2] },
+      ])
+    );
+  });
+
   const uniforms = useDerivedValue(() => {
+    "worklet";
+    const m4 = processTransform3d([
+      { translate: [width / 2, height / 2] },
+      { perspective: 300 },
+      { rotateX: rotateX.value },
+      { rotateY: rotateY.value },
+      { translate: [-width / 2, -height / 2] },
+    ]);
+    const p3 = mapPoint3d(m4, [rct.x, rct.y, 0]);
+    const p4 = mapPoint3d(m4, [rct.x + CARD_WIDTH, rct.y, 0]);
     return {
+      m4: convertToColumnMajor(m4),
       resolution: [width, height],
-      m4: convertToColumnMajor(
-        processTransform3d([
-          //   { translate: [width / 2, height / 2] },
-          // { perspective: 300 },
-          { rotateX: rotateX.value },
-          { rotateY: rotateY.value },
-          //  { translate: [-width / 2, -height / 2] },
-        ])
-      ),
+      p1: [rct.x, rct.y],
+      p2: [rct.x + CARD_WIDTH, rct.y],
+      p3,
+      p4,
     };
   });
   return (
@@ -105,12 +135,15 @@ export const FrostedCard = () => {
             height={height}
             fit="cover"
           />
-          <Fill>
+          {/* <Fill>
             <Shader source={source} uniforms={uniforms} />
-          </Fill>
-          {/* <BackdropFilter filter={<Blur blur={30} mode="clamp" />} clip={clip}>
+          </Fill> */}
+          <BackdropFilter
+            filter={<RuntimeShader source={source} uniforms={uniforms} />}
+            clip={clip}
+          >
             <Fill color="rgba(255, 255, 255, 0.1)" />
-          </BackdropFilter> */}
+          </BackdropFilter>
         </Canvas>
       </GestureDetector>
     </View>
