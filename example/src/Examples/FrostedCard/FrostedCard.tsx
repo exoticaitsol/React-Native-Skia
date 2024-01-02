@@ -10,6 +10,7 @@ import {
   usePathValue,
   Shader,
   toMatrix3,
+  convertToColumnMajor,
 } from "@shopify/react-native-skia";
 import { useDerivedValue } from "@shopify/react-native-skia/src/external/reanimated/moduleWrapper";
 import React from "react";
@@ -56,8 +57,9 @@ vec4 main(vec2 xy)
 {
   vec3 xyz = vec3(xy, 0.);
   Context ctx = Context(TRANSPARENT, xyz, resolution);
-  ctx.p = project(ctx.p, translate(vec3(300., 300., 0.)));
-  drawSphere(ctx, 300., createFill(vec4(.3, .6, 1., 1.)));
+  ctx.p = project(ctx.p, translate(vec3(resolution/2., 0.)) * m4);
+  //drawSphere(ctx, 300., createFill(vec4(.3, .6, 1., 1.)));
+  drawBox(ctx, vec3(300.), createFill(vec4(.3, .6, 1., 1.)));
   return ctx.color;
 }
 `;
@@ -80,13 +82,15 @@ export const FrostedCard = () => {
   const uniforms = useDerivedValue(() => {
     return {
       resolution: [width, height],
-      m4: processTransform3d([
-        { translate: [width / 2, height / 2] },
-        { perspective: 300 },
-        { rotateX: rotateX.value },
-        { rotateY: rotateY.value },
-        { translate: [-width / 2, -height / 2] },
-      ]),
+      m4: convertToColumnMajor(
+        processTransform3d([
+          //   { translate: [width / 2, height / 2] },
+          // { perspective: 300 },
+          { rotateX: rotateX.value },
+          { rotateY: rotateY.value },
+          //  { translate: [-width / 2, -height / 2] },
+        ])
+      ),
     };
   });
   return (
