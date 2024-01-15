@@ -1,5 +1,11 @@
-import { Canvas, Rect, Skia, Group } from "@shopify/react-native-skia";
-import type { SkRect } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Skia,
+  Picture,
+  PaintStyle,
+  rotateZ,
+  toMatrix3,
+} from "@shopify/react-native-skia";
 import React, { useMemo, useState } from "react";
 import {
   StyleSheet,
@@ -9,16 +15,26 @@ import {
   Button,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import type { SharedValue } from "react-native-reanimated";
 import Animated, {
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
+import { useAnimatedReaction } from "@shopify/react-native-skia/src/external/reanimated/moduleWrapper";
+
+import { example1, render } from "../../components/sg";
 
 const Size = 25;
 const Increaser = 50;
+const paint1 = Skia.Paint();
+paint1.setColor(Skia.Color("cyan"));
+
+const paint2 = Skia.Paint();
+paint2.setColor(Skia.Color("blue"));
+paint2.setStyle(PaintStyle.Stroke);
+paint2.setStrokeWidth(2);
 
 export const PerformanceDrawingTest: React.FC = () => {
+  const tree = useSharedValue(example1);
   const [numberOfBoxes, setNumberOfBoxes] = useState(150);
 
   const { width, height } = useWindowDimensions();
@@ -31,22 +47,25 @@ export const PerformanceDrawingTest: React.FC = () => {
     y: height * 0.25,
   });
 
-  const rects = useMemo(
-    () =>
-      new Array(numberOfBoxes)
-        .fill(0)
-        .map((_, i) =>
-          Skia.XYWHRect(
-            5 + ((i * Size) % width),
-            25 + Math.floor(i / (width / Size)) * Size,
-            SizeWidth,
-            SizeHeight
-          )
-        ),
-    [numberOfBoxes, width, SizeWidth, SizeHeight]
-  );
-
   const gesture = Gesture.Pan().onChange((e) => (pos.value = e));
+  const picture = useDerivedValue(() => {
+    tree.value.children?.forEach((child, i) => {
+      const x = 5 + ((i * Size) % width);
+      const y = 25 + Math.floor(i / (width / Size)) * Size;
+      const r = Math.atan2(pos.value.y - y, pos.value.x - x);
+      const m4 = rotateZ(r, { x, y });
+      child.props.matrix = m4;
+      child.children[0].props.rect.x = x;
+      child.children[0].props.rect.y = y;
+      child.children[0].props.rect.width = SizeWidth;
+      child.children[0].props.rect.height = SizeHeight;
+      child.children[1].props.rect.x = x;
+      child.children[1].props.rect.y = y;
+      child.children[1].props.rect.width = SizeWidth;
+      child.children[1].props.rect.height = SizeHeight;
+    });
+    return render(tree.value);
+  });
 
   return (
     <View style={styles.container}>
@@ -66,36 +85,14 @@ export const PerformanceDrawingTest: React.FC = () => {
         </View>
       </View>
       <View style={{ flex: 1 }}>
-        <Canvas style={styles.container} mode="default">
-          {rects.map((_, i) => (
-            <Rct pos={pos} key={i} rct={rects[i]} />
-          ))}
+        <Canvas style={styles.container} mode="continuous">
+          <Picture picture={picture} />
         </Canvas>
         <GestureDetector gesture={gesture}>
           <Animated.View style={StyleSheet.absoluteFill} />
         </GestureDetector>
       </View>
     </View>
-  );
-};
-
-interface RctProps {
-  pos: SharedValue<{ x: number; y: number }>;
-  rct: SkRect;
-}
-
-const Rct = ({ pos, rct }: RctProps) => {
-  const transform = useDerivedValue(() => {
-    const p1 = { x: rct.x, y: rct.y };
-    const p2 = pos.value;
-    const r = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-    return [{ rotate: r }];
-  });
-  return (
-    <Group transform={transform} origin={rct}>
-      <Rect rect={rct} color="#00ff00" />
-      <Rect rect={rct} color="#4060A3" style="stroke" strokeWidth={2} />
-    </Group>
   );
 };
 
