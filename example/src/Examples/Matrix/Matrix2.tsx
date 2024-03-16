@@ -19,6 +19,7 @@ import {
 import { Image as RNImage, Dimensions } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import { runOnUI, useSharedValue } from "react-native-reanimated";
+import { useFrameCallback } from "@shopify/react-native-skia/src/external/reanimated/moduleWrapper";
 
 export const COLS = 15;
 export const ROWS = 30;
@@ -34,7 +35,8 @@ paint.setColor(Skia.Color("green"));
 const drawTexture = (
   surface: SharedValue<SkSurface | null>,
   texture: SharedValue<SkImage | null>,
-  font: SkFont
+  font: SkFont,
+  timestamp: number
 ) => {
   "worklet";
   const symbols = font.getGlyphIDs("abcdefghijklmnopqrstuvwxyz");
@@ -48,7 +50,7 @@ const drawTexture = (
       const x = i * symbol.width;
       const y = j * symbol.height;
       canvas.drawGlyphs(
-        [symbols[(i + j) % symbols.length]],
+        [symbols[Math.round(i + j + timestamp) % symbols.length]],
         [pos],
         x + symbol.width / 4,
         y + symbol.height,
@@ -68,9 +70,10 @@ interface SceneProps {
 const Scene = ({ font }: SceneProps) => {
   const surface = useSharedValue<SkSurface | null>(null);
   const texture = useSharedValue<SkImage | null>(null);
-  useEffect(() => {
-    runOnUI(drawTexture)(surface, texture, font);
-  }, [font, surface, texture]);
+
+  useFrameCallback(({ timestamp }) => {
+    drawTexture(surface, texture, font, timestamp);
+  });
   return (
     <Image
       image={texture}
