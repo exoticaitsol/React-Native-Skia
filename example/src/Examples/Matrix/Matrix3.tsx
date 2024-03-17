@@ -25,6 +25,21 @@ const vertices = [
   [-1, 1, 1], // Vertex 7
 ].map(([x, y, z]) => [width / 2 + x * size, height / 2 + y * size, z * size]);
 
+const idx = [
+  [0, 1, 2],
+  [0, 2, 3], // Front face
+  [1, 5, 6],
+  [1, 6, 2], // Right face
+  [5, 4, 7],
+  [5, 7, 6], // Back face
+  [4, 0, 3],
+  [4, 3, 7], // Left face
+  [3, 2, 6],
+  [3, 6, 7], // Top face
+  [4, 5, 1],
+  [4, 1, 0], // Bottom face
+];
+
 // Define colors for each vertex
 const colors = [
   "#61DAFB",
@@ -56,56 +71,33 @@ export const Matrix = () => {
   const mappedVertices = useDerivedValue(() => {
     return vertices.map(([x, y, z]) => {
       const result = mapPoint3d(transform.value, [x, y, z]);
-      return vec(result[0], result[1]);
+      return result;
+    });
+  });
+
+  const v = useDerivedValue(() => {
+    return mappedVertices.value.map((vertex) => {
+      return vec(vertex[0], vertex[1]);
     });
   });
 
   const indices = useDerivedValue(() => {
-    const idx = [
-      0,
-      1,
-      2,
-      0,
-      2,
-      3, // Front face
-      1,
-      5,
-      6,
-      1,
-      6,
-      2, // Right face
-      5,
-      4,
-      7,
-      5,
-      7,
-      6, // Back face
-      4,
-      0,
-      3,
-      4,
-      3,
-      7, // Left face
-      3,
-      2,
-      6,
-      3,
-      6,
-      7, // Top face
-      4,
-      5,
-      1,
-      4,
-      1,
-      0, // Bottom face
-    ];
-    return idx;
+    const vtx = mappedVertices.value;
+    const values = idx.map((triangle) => {
+      const p0 = vtx[triangle[0]];
+      const p1 = vtx[triangle[1]];
+      const p2 = vtx[triangle[2]];
+      const z = (p0[2] + p1[2] + p2[2]) / 3;
+      return [...triangle, z];
+    });
+    values.sort((a, b) => b[3] - a[3]);
+    return values.map((triangle) => triangle.slice(0, 3)).flat();
   });
 
   return (
     <GestureDetector gesture={gesture}>
       <Canvas style={{ flex: 1 }}>
-        <Vertices vertices={mappedVertices} colors={colors} indices={indices} />
+        <Vertices vertices={v} colors={colors} indices={indices} />
       </Canvas>
     </GestureDetector>
   );
