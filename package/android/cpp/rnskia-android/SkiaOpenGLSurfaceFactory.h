@@ -8,6 +8,7 @@
 #include <android/native_window_jni.h>
 #include <android/surface_texture.h>
 #include <android/surface_texture_jni.h>
+#include <android/hardware_buffer.h>
 #include <condition_variable>
 #include <memory>
 #include <thread>
@@ -140,6 +141,20 @@ private:
 };
 
 class SkiaOpenGLSurfaceFactory {
+private:
+    typedef EGLClientBuffer (*EGLGetNativeClientBufferANDROIDProc)(const struct AHardwareBuffer*);
+    typedef EGLImageKHR (*EGLCreateImageKHRProc)(EGLDisplay, EGLContext, EGLenum, EGLClientBuffer,
+                                                 const EGLint*);
+    typedef void (*EGLImageTargetTexture2DOESProc)(EGLenum, void*);
+    EGLGetNativeClientBufferANDROIDProc fEGLGetNativeClientBufferANDROID;
+    EGLCreateImageKHRProc fEGLCreateImageKHR;
+    EGLImageTargetTexture2DOESProc fEGLImageTargetTexture2DOES;
+
+    PFNEGLCREATESYNCKHRPROC              fEGLCreateSyncKHR;
+    PFNEGLWAITSYNCKHRPROC                fEGLWaitSyncKHR;
+    PFNEGLGETSYNCATTRIBKHRPROC           fEGLGetSyncAttribKHR;
+    PFNEGLDUPNATIVEFENCEFDANDROIDPROC    fEGLDupNativeFenceFDANDROID;
+    PFNEGLDESTROYSYNCKHRPROC             fEGLDestroySyncKHR;
 public:
   /**
    * Creates a new Skia surface that is backed by a texture.

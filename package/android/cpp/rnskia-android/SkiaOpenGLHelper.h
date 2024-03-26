@@ -2,6 +2,7 @@
 
 #include "EGL/egl.h"
 #include "GLES2/gl2.h"
+#include "EGL/eglext.h"
 #include <fbjni/fbjni.h>
 #include <jni.h>
 
@@ -141,6 +142,7 @@ struct SkiaOpenGLContext {
     glContext = EGL_NO_CONTEXT;
     gl1x1Surface = EGL_NO_SURFACE;
     directContext = nullptr;
+    interface = nullptr;
   }
   ~SkiaOpenGLContext() {
     if (gl1x1Surface != EGL_NO_SURFACE) {
@@ -154,6 +156,10 @@ struct SkiaOpenGLContext {
       directContext = nullptr;
     }
 
+    if (interface) {
+      interface = nullptr;
+    }
+
     if (glContext != EGL_NO_CONTEXT) {
       eglDestroyContext(OpenGLResourceHolder::getInstance().glDisplay,
                         glContext);
@@ -163,6 +169,7 @@ struct SkiaOpenGLContext {
   EGLContext glContext;
   EGLSurface gl1x1Surface;
   sk_sp<GrDirectContext> directContext;
+  sk_sp<const GrGLInterface> interface;
 };
 
 class SkiaOpenGLHelper {
@@ -270,6 +277,7 @@ public:
 
       // Create the Skia context
       auto backendInterface = GrGLMakeNativeInterface();
+      context->interface = backendInterface;
       context->directContext = GrDirectContexts::MakeGL(backendInterface);
 
       if (context->directContext == nullptr) {

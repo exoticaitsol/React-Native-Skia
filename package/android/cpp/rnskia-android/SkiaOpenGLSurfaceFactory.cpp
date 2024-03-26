@@ -13,6 +13,28 @@ namespace RNSkia {
 thread_local SkiaOpenGLContext ThreadContextHolder::ThreadSkiaOpenGLContext;
 
 sk_sp<SkImage> SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo &info, const void *buffer) {
+    // Setup OpenGL and Skia:
+  auto ctx = ThreadContextHolder::ThreadSkiaOpenGLContext;
+  if (!SkiaOpenGLHelper::createSkiaDirectContextIfNecessary(
+          &ctx)) {
+
+    RNSkLogger::logToConsole(
+        "Could not create Skia Surface from native window / surface. "
+        "Failed creating Skia Direct Context");
+    return nullptr;
+  }
+
+  if (!ctx.interface->hasExtension("EGL_KHR_image") ||
+      !ctx.interface->hasExtension("EGL_ANDROID_get_native_client_buffer") ||
+      !ctx.interface->hasExtension("GL_OES_EGL_image_external") ||
+      !ctx.interface->hasExtension("GL_OES_EGL_image") ||
+      !ctx.interface->hasExtension("EGL_KHR_fence_sync") ||
+      !ctx.interface->hasExtension("EGL_ANDROID_native_fence_sync")) {
+    RNSkLogger::logToConsole(
+      "Didn't find the right extensions to make a texture from a buffer");
+    return nullptr;
+  }
+
   return nullptr;
 }
 
