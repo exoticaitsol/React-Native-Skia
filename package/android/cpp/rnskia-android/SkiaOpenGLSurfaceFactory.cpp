@@ -12,6 +12,11 @@ namespace RNSkia {
 
 thread_local SkiaOpenGLContext ThreadContextHolder::ThreadSkiaOpenGLContext;
 
+sk_sp<SkImage> SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo &info, const void *buffer) {
+  return nullptr;
+}
+
+
 sk_sp<SkSurface> SkiaOpenGLSurfaceFactory::makeOffscreenSurface(int width,
                                                                 int height) {
   // Setup OpenGL and Skia:

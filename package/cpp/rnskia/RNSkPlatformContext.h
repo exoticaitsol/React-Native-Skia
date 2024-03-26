@@ -104,6 +104,12 @@ public:
   virtual sk_sp<SkImage> takeScreenshotFromViewTag(size_t tag) = 0;
 
   /**
+   * Creates an SkImage from an android hardware buffer or metal texture
+   */
+  virtual sk_sp<SkImage> makeImageFromTexture(
+      const SkImageInfo &info, const void *buffer) = 0;
+
+  /**
    Returns the javascript runtime
    */
   jsi::Runtime *getJsRuntime() { return _jsRuntime; }

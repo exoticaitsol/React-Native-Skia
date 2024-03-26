@@ -10,6 +10,7 @@
 #include "SkTypes.h"
 
 #include <android/bitmap.h>
+#include <android/hardware_buffer.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"

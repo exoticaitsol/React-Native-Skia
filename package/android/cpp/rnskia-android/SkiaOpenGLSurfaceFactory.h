@@ -160,6 +160,8 @@ public:
   makeWindowedSurface(jobject window, int width, int height) {
     return std::make_unique<WindowSurfaceHolder>(window, width, height);
   }
+
+  static sk_sp<SkImage> makeImageFromTexture(const SkImageInfo &info, const void *buffer);
 };
 
 } // namespace RNSkia
