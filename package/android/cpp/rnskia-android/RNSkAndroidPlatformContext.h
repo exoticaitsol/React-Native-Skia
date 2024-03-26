@@ -56,7 +56,8 @@ public:
     _jniPlatformContext->runTaskOnMainThread(task);
   }
 
-  sk_sp<SkImage> makeImageFromTexture(const SkImageInfo &info, const void *buffer) override {
+  sk_sp<SkImage> makeImageFromTexture(const SkImageInfo &info,
+                                      const void *buffer) override {
     return SkiaOpenGLSurfaceFactory::makeImageFromTexture(info, buffer);
   }
 

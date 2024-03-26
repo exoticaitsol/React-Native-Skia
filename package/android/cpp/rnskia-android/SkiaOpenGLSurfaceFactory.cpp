@@ -12,11 +12,12 @@ namespace RNSkia {
 
 thread_local SkiaOpenGLContext ThreadContextHolder::ThreadSkiaOpenGLContext;
 
-sk_sp<SkImage> SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo &info, const void *buffer) {
-    // Setup OpenGL and Skia:
+sk_sp<SkImage>
+SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo &info,
+                                               const void *buffer) {
+  // Setup OpenGL and Skia:
   auto ctx = ThreadContextHolder::ThreadSkiaOpenGLContext;
-  if (!SkiaOpenGLHelper::createSkiaDirectContextIfNecessary(
-          &ctx)) {
+  if (!SkiaOpenGLHelper::createSkiaDirectContextIfNecessary(&ctx)) {
 
     RNSkLogger::logToConsole(
         "Could not create Skia Surface from native window / surface. "
@@ -24,6 +25,7 @@ sk_sp<SkImage> SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo 
     return nullptr;
   }
 
+  // TODO: do this only once:
   if (!ctx.interface->hasExtension("EGL_KHR_image") ||
       !ctx.interface->hasExtension("EGL_ANDROID_get_native_client_buffer") ||
       !ctx.interface->hasExtension("GL_OES_EGL_image_external") ||
@@ -31,13 +33,69 @@ sk_sp<SkImage> SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo 
       !ctx.interface->hasExtension("EGL_KHR_fence_sync") ||
       !ctx.interface->hasExtension("EGL_ANDROID_native_fence_sync")) {
     RNSkLogger::logToConsole(
-      "Didn't find the right extensions to make a texture from a buffer");
+        "Didn't find the right extensions to make a texture from a buffer");
+    return nullptr;
+  }
+
+  fEGLGetNativeClientBufferANDROID =
+      (EGLGetNativeClientBufferANDROIDProc)eglGetProcAddress(
+          "eglGetNativeClientBufferANDROID");
+  if (!fEGLGetNativeClientBufferANDROID) {
+    RNSkLogger::logToConsole(
+        "Failed to get the eglGetNativeClientBufferAndroid proc");
+    return nullptr;
+  }
+
+  fEGLCreateImageKHR =
+      (EGLCreateImageKHRProc)eglGetProcAddress("eglCreateImageKHR");
+  if (!fEGLCreateImageKHR) {
+    RNSkLogger::logToConsole("Failed to get the proc eglCreateImageKHR");
+    return nullptr;
+  }
+
+  fEGLImageTargetTexture2DOES =
+      (EGLImageTargetTexture2DOESProc)eglGetProcAddress(
+          "glEGLImageTargetTexture2DOES");
+  if (!fEGLImageTargetTexture2DOES) {
+    RNSkLogger::logToConsole(
+        "Failed to get the proc EGLImageTargetTexture2DOES");
+    return nullptr;
+  }
+
+  fEGLCreateSyncKHR =
+      (PFNEGLCREATESYNCKHRPROC)eglGetProcAddress("eglCreateSyncKHR");
+  if (!fEGLCreateSyncKHR) {
+    RNSkLogger::logToConsole("Failed to get the proc eglCreateSyncKHR");
+    return nullptr;
+  }
+  fEGLWaitSyncKHR = (PFNEGLWAITSYNCKHRPROC)eglGetProcAddress("eglWaitSyncKHR");
+  if (!fEGLWaitSyncKHR) {
+    RNSkLogger::logToConsole("Failed to get the proc eglWaitSyncKHR");
+    return nullptr;
+  }
+  fEGLGetSyncAttribKHR =
+      (PFNEGLGETSYNCATTRIBKHRPROC)eglGetProcAddress("eglGetSyncAttribKHR");
+  if (!fEGLGetSyncAttribKHR) {
+    RNSkLogger::logToConsole("Failed to get the proc eglGetSyncAttribKHR");
+    return nullptr;
+  }
+  fEGLDupNativeFenceFDANDROID =
+      (PFNEGLDUPNATIVEFENCEFDANDROIDPROC)eglGetProcAddress(
+          "eglDupNativeFenceFDANDROID");
+  if (!fEGLDupNativeFenceFDANDROID) {
+    RNSkLogger::logToConsole(
+        "Failed to get the proc eglDupNativeFenceFDANDROID");
+    return nullptr;
+  }
+  fEGLDestroySyncKHR =
+      (PFNEGLDESTROYSYNCKHRPROC)eglGetProcAddress("eglDestroySyncKHR");
+  if (!fEGLDestroySyncKHR) {
+    RNSkLogger::logToConsole("Failed to get the proc eglDestroySyncKHR");
     return nullptr;
   }
 
   return nullptr;
 }
-
 
 sk_sp<SkSurface> SkiaOpenGLSurfaceFactory::makeOffscreenSurface(int width,
                                                                 int height) {

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "EGL/egl.h"
-#include "GLES2/gl2.h"
 #include "EGL/eglext.h"
+#include "GLES2/gl2.h"
 #include <fbjni/fbjni.h>
 #include <jni.h>
 

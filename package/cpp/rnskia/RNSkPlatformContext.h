@@ -106,8 +106,8 @@ public:
   /**
    * Creates an SkImage from an android hardware buffer or metal texture
    */
-  virtual sk_sp<SkImage> makeImageFromTexture(
-      const SkImageInfo &info, const void *buffer) = 0;
+  virtual sk_sp<SkImage> makeImageFromTexture(const SkImageInfo &info,
+                                              const void *buffer) = 0;
 
   /**
    Returns the javascript runtime
