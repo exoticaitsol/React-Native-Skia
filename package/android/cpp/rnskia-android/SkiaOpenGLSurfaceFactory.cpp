@@ -10,6 +10,12 @@
 
 namespace RNSkia {
 
+typedef EGLClientBuffer (*EGLGetNativeClientBufferANDROIDProc)(
+      const struct AHardwareBuffer *);
+typedef EGLImageKHR (*EGLCreateImageKHRProc)(EGLDisplay, EGLContext, EGLenum,
+                                               EGLClientBuffer, const EGLint *);
+typedef void (*EGLImageTargetTexture2DOESProc)(EGLenum, void *);
+
 thread_local SkiaOpenGLContext ThreadContextHolder::ThreadSkiaOpenGLContext;
 
 sk_sp<SkImage>
@@ -37,7 +43,9 @@ SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo &info,
     return nullptr;
   }
 
-  fEGLGetNativeClientBufferANDROID =
+
+
+  EGLGetNativeClientBufferANDROIDProc fEGLGetNativeClientBufferANDROID =
       (EGLGetNativeClientBufferANDROIDProc)eglGetProcAddress(
           "eglGetNativeClientBufferANDROID");
   if (!fEGLGetNativeClientBufferANDROID) {
@@ -46,14 +54,14 @@ SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo &info,
     return nullptr;
   }
 
-  fEGLCreateImageKHR =
+  EGLCreateImageKHRProc fEGLCreateImageKHR =
       (EGLCreateImageKHRProc)eglGetProcAddress("eglCreateImageKHR");
   if (!fEGLCreateImageKHR) {
     RNSkLogger::logToConsole("Failed to get the proc eglCreateImageKHR");
     return nullptr;
   }
 
-  fEGLImageTargetTexture2DOES =
+  EGLImageTargetTexture2DOESProc fEGLImageTargetTexture2DOES =
       (EGLImageTargetTexture2DOESProc)eglGetProcAddress(
           "glEGLImageTargetTexture2DOES");
   if (!fEGLImageTargetTexture2DOES) {
@@ -62,24 +70,25 @@ SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo &info,
     return nullptr;
   }
 
-  fEGLCreateSyncKHR =
+  PFNEGLCREATESYNCKHRPROC fEGLCreateSyncKHR =
       (PFNEGLCREATESYNCKHRPROC)eglGetProcAddress("eglCreateSyncKHR");
   if (!fEGLCreateSyncKHR) {
     RNSkLogger::logToConsole("Failed to get the proc eglCreateSyncKHR");
     return nullptr;
   }
-  fEGLWaitSyncKHR = (PFNEGLWAITSYNCKHRPROC)eglGetProcAddress("eglWaitSyncKHR");
+
+  PFNEGLWAITSYNCKHRPROC fEGLWaitSyncKHR = (PFNEGLWAITSYNCKHRPROC)eglGetProcAddress("eglWaitSyncKHR");
   if (!fEGLWaitSyncKHR) {
     RNSkLogger::logToConsole("Failed to get the proc eglWaitSyncKHR");
     return nullptr;
   }
-  fEGLGetSyncAttribKHR =
+  PFNEGLGETSYNCATTRIBKHRPROC fEGLGetSyncAttribKHR =
       (PFNEGLGETSYNCATTRIBKHRPROC)eglGetProcAddress("eglGetSyncAttribKHR");
   if (!fEGLGetSyncAttribKHR) {
     RNSkLogger::logToConsole("Failed to get the proc eglGetSyncAttribKHR");
     return nullptr;
   }
-  fEGLDupNativeFenceFDANDROID =
+  PFNEGLDUPNATIVEFENCEFDANDROIDPROC fEGLDupNativeFenceFDANDROID =
       (PFNEGLDUPNATIVEFENCEFDANDROIDPROC)eglGetProcAddress(
           "eglDupNativeFenceFDANDROID");
   if (!fEGLDupNativeFenceFDANDROID) {
@@ -87,14 +96,67 @@ SkiaOpenGLSurfaceFactory::makeImageFromTexture(const SkImageInfo &info,
         "Failed to get the proc eglDupNativeFenceFDANDROID");
     return nullptr;
   }
-  fEGLDestroySyncKHR =
+  PFNEGLDESTROYSYNCKHRPROC fEGLDestroySyncKHR =
       (PFNEGLDESTROYSYNCKHRPROC)eglGetProcAddress("eglDestroySyncKHR");
   if (!fEGLDestroySyncKHR) {
     RNSkLogger::logToConsole("Failed to get the proc eglDestroySyncKHR");
     return nullptr;
   }
 
-  return nullptr;
+  // Import buffer
+    //   EGLClientBuffer eglClientBuffer = fEGLGetNativeClientBufferANDROID(buffer);
+    // EGLint eglAttribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+    //                         EGL_NONE };
+    // EGLDisplay eglDisplay = eglGetCurrentDisplay();
+    // fImage = fEGLCreateImageKHR(eglDisplay, EGL_NO_CONTEXT,
+    //                             EGL_NATIVE_BUFFER_ANDROID,
+    //                             eglClientBuffer, eglAttribs);
+
+    // if (EGL_NO_IMAGE_KHR == fImage) {
+    //    // SkDebugf("Could not create EGL image, err = (%#x)\n", (int) eglGetError() );
+    //     return nullptr;
+    // }
+    // GR_GL_CALL(fGLCtx->gl(), GenTextures(1, &fTexID));
+    // if (!fTexID) {
+    //     ERRORF(reporter, "Failed to create GL Texture");
+    //     return false;
+    // }
+    // GR_GL_CALL_NOERRCHECK(fGLCtx->gl(), BindTexture(GR_GL_TEXTURE_2D, fTexID));
+    // if (fGLCtx->gl()->fFunctions.fGetError() != GR_GL_NO_ERROR) {
+    //     ERRORF(reporter, "Failed to bind GL Texture");
+    //     return false;
+    // }
+
+    // fEGLImageTargetTexture2DOES(GL_TEXTURE_2D, fImage);
+    // if (GrGLenum error = fGLCtx->gl()->fFunctions.fGetError(); error != GR_GL_NO_ERROR) {
+    //     ERRORF(reporter, "EGLImageTargetTexture2DOES failed (%#x)", (int) error);
+    //     return false;
+    // }
+
+    // fDirectContext->resetContext(kTextureBinding_GrGLBackendState);
+    //     GrGLTextureInfo textureInfo;
+    // textureInfo.fTarget = GR_GL_TEXTURE_2D;
+    // textureInfo.fID = fTexID;
+    // textureInfo.fFormat = GR_GL_RGBA8;
+
+    // auto backendTex = GrBackendTextures::MakeGL(DEV_W, DEV_H, skgpu::Mipmapped::kNo, textureInfo);
+    // REPORTER_ASSERT(reporter, backendTex.isValid());
+
+    // sk_sp<SkImage> image = SkImages::BorrowTextureFrom(fDirectContext,
+    //                                                    backendTex,
+    //                                                    kTopLeft_GrSurfaceOrigin,
+    //                                                    kRGBA_8888_SkColorType,
+    //                                                    kPremul_SkAlphaType,
+    //                                                    nullptr);
+
+    // if (!image) {
+    //     ERRORF(reporter, "Failed to make wrapped GL SkImage");
+    //     return nullptr;
+    // }
+
+    // return image;
+    return nullptr;
+    
 }
 
 sk_sp<SkSurface> SkiaOpenGLSurfaceFactory::makeOffscreenSurface(int width,
