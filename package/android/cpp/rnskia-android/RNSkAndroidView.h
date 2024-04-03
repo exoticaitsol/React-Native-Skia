@@ -6,12 +6,18 @@
 
 #include <RNSkOpenGLCanvasProvider.h>
 #include <android/native_window.h>
+#include <android/hardware_buffer_jni.h>
+
+#include "SkImageInfo.h"
+#include "SkImage.h"
 
 namespace RNSkia {
 
 class RNSkBaseAndroidView {
 public:
   virtual void surfaceAvailable(jobject surface, int width, int height) = 0;
+
+  virtual void drawImageFromHB(jobject hb) = 0;
 
   virtual void surfaceDestroyed() = 0;
 
@@ -41,7 +47,6 @@ public:
   void surfaceAvailable(jobject surface, int width, int height) override {
     std::static_pointer_cast<RNSkOpenGLCanvasProvider>(T::getCanvasProvider())
         ->surfaceAvailable(surface, width, height);
-
     // Try to render directly when the surface has been set so that
     // we don't have to wait until the draw loop returns.
     RNSkView::renderImmediate();
@@ -58,6 +63,13 @@ public:
     // This is only need for the first time to frame, this renderImmediate call
     // will invoke updateTexImage for the previous frame
     RNSkView::renderImmediate();
+  }
+
+  void drawImageFromHB(jobject hb) override {
+    JNIEnv *env = facebook::jni::Environment::current();
+    const AHardwareBuffer *hardwareBuffer = AHardwareBuffer_fromHardwareBuffer(env, hb);
+    //auto info = SkImageInfo::Make(256, 256, kRGBA_8888_SkColorType, kUnpremul_SkAlphaType);
+    //auto image = SkiaOpenGLSurfaceFactory::makeImageFromHardwareBuffer(info, (void *)hardwareBuffer);
   }
 
   float getPixelDensity() override {

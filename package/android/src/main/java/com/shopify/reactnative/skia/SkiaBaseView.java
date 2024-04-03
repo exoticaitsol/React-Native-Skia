@@ -1,12 +1,25 @@
 package com.shopify.reactnative.skia;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
+import android.hardware.HardwareBuffer;
+import android.media.ImageReader;
+import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.TextureView;
 
+import androidx.annotation.RequiresApi;
+
 import com.facebook.react.views.view.ReactViewGroup;
+
+import java.nio.ByteBuffer;
 
 public abstract class SkiaBaseView extends ReactViewGroup implements TextureView.SurfaceTextureListener {
     private TextureView mTexture;
@@ -19,6 +32,33 @@ public abstract class SkiaBaseView extends ReactViewGroup implements TextureView
         mTexture.setSurfaceTextureListener(this);
         mTexture.setOpaque(false);
         addView(mTexture);
+    }
+
+    @SuppressLint("WrongConstant")
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    private static HardwareBuffer createHardwareBuffer() {
+        long usage = HardwareBuffer.USAGE_CPU_READ_RARELY |
+                HardwareBuffer.USAGE_CPU_WRITE_RARELY |
+                HardwareBuffer.USAGE_GPU_COLOR_OUTPUT |
+                HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE;
+        ImageReader imageReader = ImageReader.newInstance(256, 256, PixelFormat.RGBA_8888, 2, usage);
+        Surface surface = imageReader.getSurface();
+        Canvas canvas = surface.lockCanvas(null);
+        try {
+            // Ensure the canvas is not null
+            if (canvas != null) {
+                // Fill the canvas with red color
+                canvas.drawColor(Color.RED);
+            }
+        } finally {
+            // Regardless of whether an exception is thrown, release the Canvas to ensure
+            // the surface is not left in an inconsistent state
+            if (canvas != null) {
+                surface.unlockCanvasAndPost(canvas);
+            }
+        }
+        HardwareBuffer hb = imageReader.acquireLatestImage().getHardwareBuffer();
+        return hb;
     }
 
     public void destroySurface() {
@@ -131,6 +171,12 @@ public abstract class SkiaBaseView extends ReactViewGroup implements TextureView
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
         Log.i(tag, "onSurfaceTextureSizeChanged " + width + "/" + height);
         surfaceSizeChanged(width, height);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            HardwareBuffer hb = createHardwareBuffer();
+            if (hb != null) {
+               drawImageFromHB(hb);
+            }
+        }
     }
 
     @Override
@@ -154,6 +200,8 @@ public abstract class SkiaBaseView extends ReactViewGroup implements TextureView
 //        Log.i(tag, "onSurfaceTextureUpdated "+frameDuration+"ms");
 //        _prevTimestamp = timestamp;
     }
+
+    protected abstract void drawImageFromHB(HardwareBuffer hb);
 
     protected abstract void surfaceAvailable(Object surface, int width, int height);
 

@@ -41,6 +41,10 @@ protected:
     _skiaAndroidView->surfaceSizeChanged(width, height);
   }
 
+  virtual void drawImageFromHB(jobject hb) {
+    _skiaAndroidView->drawImageFromHB(hb);
+  }
+
   virtual void surfaceDestroyed() { _skiaAndroidView->surfaceDestroyed(); }
 
   virtual void setMode(std::string mode) { _skiaAndroidView->setMode(mode); }
