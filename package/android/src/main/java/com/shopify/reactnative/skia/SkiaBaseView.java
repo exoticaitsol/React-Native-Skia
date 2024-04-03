@@ -201,7 +201,7 @@ public abstract class SkiaBaseView extends ReactViewGroup implements TextureView
 //        _prevTimestamp = timestamp;
     }
 
-    protected abstract void drawImageFromHB(HardwareBuffer hb);
+    protected abstract void drawImageFromHB(Object hb);
 
     protected abstract void surfaceAvailable(Object surface, int width, int height);
 

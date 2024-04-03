@@ -68,8 +68,14 @@ public:
   void drawImageFromHB(jobject hb) override {
     JNIEnv *env = facebook::jni::Environment::current();
     const AHardwareBuffer *hardwareBuffer = AHardwareBuffer_fromHardwareBuffer(env, hb);
-    //auto info = SkImageInfo::Make(256, 256, kRGBA_8888_SkColorType, kUnpremul_SkAlphaType);
-    //auto image = SkiaOpenGLSurfaceFactory::makeImageFromHardwareBuffer(info, (void *)hardwareBuffer);
+    auto info = SkImageInfo::Make(256, 256, kRGBA_8888_SkColorType, kUnpremul_SkAlphaType);
+    auto image = SkiaOpenGLSurfaceFactory::makeImageFromHardwareBuffer(info, (void *)hardwareBuffer);
+    auto img = image->makeNonTextureImage();
+        std::static_pointer_cast<RNSkOpenGLCanvasProvider>(T::getCanvasProvider())
+        ->renderToCanvas([img](SkCanvas *canvas) {
+          canvas->drawImage(img, 0, 0);
+        });
+    //RNSkView::renderImmediate();
   }
 
   float getPixelDensity() override {

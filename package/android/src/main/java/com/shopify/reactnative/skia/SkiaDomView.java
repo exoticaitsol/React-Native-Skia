@@ -23,7 +23,7 @@ public class SkiaDomView extends SkiaBaseView {
         super.finalize();
         mHybridData.resetNative();
     }
-    protected native void drawImageFromHB(HardwareBuffer hb);
+    protected native void drawImageFromHB(Object hb);
 
     private native HybridData initHybrid(SkiaManager skiaManager);
 
