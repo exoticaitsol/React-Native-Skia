@@ -1,6 +1,7 @@
 package com.shopify.reactnative.skia;
 
 import android.content.Context;
+import android.hardware.HardwareBuffer;
 
 import com.facebook.jni.HybridData;
 import com.facebook.jni.annotations.DoNotStrip;
@@ -22,10 +23,11 @@ public class SkiaDomView extends SkiaBaseView {
         super.finalize();
         mHybridData.resetNative();
     }
-
     private native HybridData initHybrid(SkiaManager skiaManager);
 
     protected native void surfaceAvailable(Object surface, int width, int height);
+
+    protected native void drawHB(Object hb);
 
     protected native void surfaceSizeChanged(int width, int height);
 

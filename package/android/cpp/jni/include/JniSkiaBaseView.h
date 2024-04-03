@@ -37,6 +37,11 @@ protected:
     _skiaAndroidView->surfaceAvailable(surface, width, height);
   }
 
+
+  virtual void drawHB(jobject hb) { 
+    _skiaAndroidView->drawHB(hb);
+  }
+
   virtual void surfaceSizeChanged(int width, int height) {
     _skiaAndroidView->surfaceSizeChanged(width, height);
   }

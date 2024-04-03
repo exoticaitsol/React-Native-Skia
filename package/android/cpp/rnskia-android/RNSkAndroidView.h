@@ -15,6 +15,8 @@ public:
 
   virtual void surfaceDestroyed() = 0;
 
+  virtual void drawHB(jobject hb) = 0;
+
   virtual void surfaceSizeChanged(int width, int height) = 0;
 
   virtual float getPixelDensity() = 0;
@@ -45,6 +47,10 @@ public:
     // Try to render directly when the surface has been set so that
     // we don't have to wait until the draw loop returns.
     RNSkView::renderImmediate();
+  }
+
+  void drawHB(jobject hb) override {
+    //JNIEnv *env = facebook::jni::Environment::current();
   }
 
   void surfaceDestroyed() override {

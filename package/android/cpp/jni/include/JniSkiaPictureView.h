@@ -37,6 +37,7 @@ public:
         {makeNativeMethod("initHybrid", JniSkiaPictureView::initHybrid),
          makeNativeMethod("surfaceAvailable",
                           JniSkiaPictureView::surfaceAvailable),
+         makeNativeMethod("drawHB", JniSkiaPictureView::drawHB),
          makeNativeMethod("surfaceDestroyed",
                           JniSkiaPictureView::surfaceDestroyed),
          makeNativeMethod("surfaceSizeChanged",
@@ -57,6 +58,10 @@ protected:
 
   void surfaceAvailable(jobject surface, int width, int height) override {
     JniSkiaBaseView::surfaceAvailable(surface, width, height);
+  }
+
+  void drawHB(jobject hb) override { 
+    JniSkiaBaseView::drawHB(hb);
   }
 
   void surfaceSizeChanged(int width, int height) override {
