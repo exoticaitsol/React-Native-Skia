@@ -32,7 +32,11 @@ export const drawAsImage = (element: ReactElement, size: SkSize) => {
   return drawAsImageFromPicture(drawAsPicture(element), size);
 };
 
-// TODO: We're not sure yet why PixelRatio is not needed here.
+// Offscreen there is no notion of pixel density
+// However, some users might be confused when using useTexture, using dimensions in points not pixels
+// If we were to do the scaling here, APIs that textures as input (e.g Atlas)
+// would need to adapt to the pixel density
+// We are not sure yet if the APIs could be more ergonomic there
 const pd = 1;
 export const drawAsImageFromPicture = (picture: SkPicture, size: SkSize) => {
   "worklet";
